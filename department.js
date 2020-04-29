@@ -14,7 +14,7 @@ let router = express.Router();
 
 let DataLayer = require("./companydata");
 
-// GET all departments from company (WORKING)
+// GET a department from company (WORKING)
 router.get("/", function(request, response) {
    let dataLayer = new DataLayer('txm5483');
    console.log("Received GET for '/department'");
@@ -22,13 +22,14 @@ router.get("/", function(request, response) {
    // Get variables from query
    let inCompany = request.query.company;
    let inDeptId = request.query.dept_id;
+
    // Try to get stuff from data layer
    try {
       let departments = dataLayer.getDepartment(inCompany, inDeptId);
       return response.status(200).json(departments);
    } catch(error) {
       console.error("Error getting departments: " + error);
-      return response.status(404).json({"error":"Could not get departments."});
+      return response.status(404).json({"error":"Could not get department '" + inDeptId +  "''."});
    }
 });
 
@@ -41,28 +42,42 @@ router.post("/", function(request, response) {
    // Get variables from body
    let inCompany = request.body.company;
    let inDeptName = request.body.dept_name;
-   let inDeptNo = request.body.dept_no;
+   let inDeptNo = "txm5483-" + request.body.dept_no;
    let inLocation = request.body.location;
 
-   // Try to post stuff to data layer
-   try {
-      // Create new department object to insert & insert into data layer
-      let newDepartment = new dataLayer.Department(inCompany, inDeptName, inDeptNo, inLocation);
-      let insertedDepartment = dataLayer.insertDepartment(newDepartment);
+   // If all query variables are not null
+   if (inCompany && inDeptName && inDeptNo && inLocation) {
 
-      // If insertedDepartment is null
-      if (!insertedDepartment) {
-         return response.status(404).json({error:"Did not insert department."});
-      }
-      // Return
-      return response.status(200).json(insertedDepartment);
+      try {
+         // Check if there is a duplicate department in company
+         if (JSON.stringify(dataLayer.getAllDepartment(inCompany)).includes(inDeptNo)) {
+            console.log("Error with POST: Duplicate Department in company.");
+            return response.status(404).json({error:"Duplicate department number in company " + inCompany + "."})
+         }
+         // Create new department object to insert & insert into data layer
+         let newDepartment = new dataLayer.Department(inCompany, inDeptName, inDeptNo, inLocation);
+         let insertedDepartment = dataLayer.insertDepartment(newDepartment);
 
-   } catch(error) {
-      console.error("Error inserting departments: " + error);
-      return response.status(404).json({error:"Could not get departments."});
+         // If insertedDepartment is null
+         if (!insertedDepartment) {
+            console.log("Error with POST: Did not insert department.");
+            return response.status(404).json({error:"Did not insert department."});
+         }
+         // Return inserted department
+         return response.status(200).json({success:insertedDepartment});
+
+      } catch(error) {
+         console.error("Error inserting department: " + error);
+         return response.status(404).json({error:"Could not get departments."});
+      } // End catch
+
+   } else {
+      // If all fields in query are NOT filled out
+      return response.status(404).json({error:"Not all fields are filled out."});
    }
 });
 
+// Update a department
 router.put("/", function(request, response) {
 
    let dataLayer = new DataLayer('txm5483');
@@ -76,25 +91,62 @@ router.put("/", function(request, response) {
    let inLocation = request.body.location;
    let inDeptId = request.body.dept_id;
 
-   // Try to post stuff to data layer
-   try {
-      // Create new department object to insert & insert into data layer
-      let newDepartment = new dataLayer.Department(inCompany, inDeptName, inDeptNo, inLocation, inDeptId);
-      console.log(newDepartment);
-      let updatedDepartment = dataLayer.updateDepartment(newDepartment);
+   if (inCompany && inDeptName && inDeptNo && inLocation && inDeptId) {
+      // Try to post stuff to data layer
+      try {
 
-      // If updatedDepartment is null
-      if (!updatedDepartment) {
-         return response.status(404).json({error:"Did not update department."})
+         // Check if Department ID exists in Company
+         if (!JSON.stringify(dataLayer.getAllDepartment(inCompany)).includes(inDeptId)) {
+            console.log("Error with POST: Department ID does not exist.");
+            return response.status(404).json({error:"Department with dept_id '" + inDeptId + "' does not exist in " + inCompany + "."})
+         }
+
+         // Check if there is a Duplicate department in company
+         if (JSON.stringify(dataLayer.getAllDepartment(inCompany)).includes(inDeptNo)) {
+            console.log("Error with POST: Duplicate Department in company.");
+            return response.status(404).json({error:"There is a department with dept_no '" + inDeptNo + "' in company " + inCompany + "."})
+         }
+
+         // Create new department object to insert & insert into data layer
+         let newDepartment = new dataLayer.Department(inCompany, inDeptName, inDeptNo, inLocation, inDeptId);
+         console.log(newDepartment);
+         let updatedDepartment = dataLayer.updateDepartment(newDepartment);
+
+         // If updatedDepartment is null
+         if (!updatedDepartment) {
+            return response.status(404).json({error:"Did not update department."})
+         }
+         // Return successful
+         return response.status(200).json({success:updatedDepartment});
+
+      } catch(error) {
+         console.error("Error updating departments: " + error);
+         return response.status(404).json({error:"Could not update departments."});
       }
-      // Return
-      return response.status(200).json(updatedDepartment);
-
-   } catch(error) {
-      console.error("Error updating departments: " + error);
-      return response.status(404).json({error:"Could not get departments."});
+   } else {
+      return response.status(404).json({error:"Not all fields are filled out."});
    }
 });
+
+// Delete a department
+router.delete("/", function(request, response) {
+   let dataLayer = new DataLayer('txm5483');
+   console.log("Received DELETE for '/department'");
+
+   // Get variables from query
+   let inCompany = request.query.company;
+   let inDeptId = request.query.dept_id;
+
+   // Try to delete stuff from data layer
+   try {
+      let formerDepartment = dataLayer.deleteDepartment(inCompany, inDeptId);
+      return response.status(200).json({success:"Department " + inDeptId + " from " + inCompany + " deleted."});
+   } catch(error) {
+      console.error("Error deleting department ''" + inDeptId + "'': " + error);
+      return response.status(404).json({"error":"Could not delete department ''" + inDeptId + "''."});
+   }
+});
+
 
 
 // Allows server.js to see the department router

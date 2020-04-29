@@ -7,7 +7,6 @@ const app = express();
 
 let bodyParser = require("body-parser");
 let DataLayer = require("./companydata");
-let dl = new DataLayer('txm5483');
 
 // Used for body parser
 app.use(express.json());
@@ -27,6 +26,9 @@ app.use('/CompanyServices/timecard', timecard);
 let company = require('./company');
 app.use('/CompanyServices/company', company);
 
+
+//////////////////////////////////////////// START OTHER ROUTES HANDLING ////////////////////////////////////////////
+
 // Get all departments from a company
 app.get("/CompanyServices/departments", function(request, response) {
    let dataLayer = new DataLayer('txm5483');
@@ -43,6 +45,11 @@ app.get("/CompanyServices/departments", function(request, response) {
       return response.status(404).json({"error":"Could not get departments."});
    }
 });
+
+//////////////////////////////////////////// END OTHER ROUTES HANDLING ////////////////////////////////////////////
+
+
+///////////////////////////////////////////////// START SERVER ////////////////////////////////////////////////////
 
 var server = app.listen(8081,function() {
    var host = server.address().address;

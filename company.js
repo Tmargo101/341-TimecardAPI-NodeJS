@@ -14,10 +14,10 @@ router.delete("/", function(request, response) {
    // Try to delete stuff from data layer
    try {
       let formerCompany = dataLayer.deleteCompany(inCompany);
-      return response.status(200).json({message:formerCompany});
+      return response.status(200).json({success: inCompany + "'s information deleted.'"});
    } catch(error) {
       console.error("Error deleting company: " + error);
-      return response.status(404).json({"error":"Could not delete company."});
+      return response.status(404).json({"error":"Could not delete company ''" + inCompany + "''."});
    }
 });
 
