@@ -1,67 +1,47 @@
 // Tom Margosian
 // ISTE-341 Project 3
 
+// Import express
 let express = require("express");
 const app = express();
 
-let DataLayer = require("./companydata/index.js");
+let bodyParser = require("body-parser");
+let DataLayer = require("./companydata");
 let dl = new DataLayer('txm5483');
 
+// Used for body parser
+app.use(express.json());
+app.use(express.urlencoded({extended:false}))
 
+// Forward all /department
+let department = require('./department');
+app.use('/CompanyServices/department', department);
+// app.use('/departments', department);
 
-// GET all departments from company
-app.get("/departments", function(request, response) {
-   console.log("GET Request for '/departments'");
-   var departments = new dl.Department('txm5483');
-   console.log(departments);
-   response.send("GET Request for '/departments"+ departments);
+let employee = require('./employee');
+app.use('/CompanyServices/employee', employee);
 
-});
+let timecard = require("./timecard");
+app.use('/CompanyServices/timecard', timecard);
 
-// GET a department from company
-app.get("/department", function(request, response) {
-   console.log("GET Request for '/department'");
-   response.send("GET Request for '/department");
-});
+let company = require('./company');
+app.use('/CompanyServices/company', company);
 
-// GET all employees from company
-app.get("/employees", function(request, response) {
-   console.log("GET Request for '/employees'");
-   response.send("GET Request for '/employees");
-});
+// Get all departments from a company
+app.get("/CompanyServices/departments", function(request, response) {
+   let dataLayer = new DataLayer('txm5483');
+   console.log("Received GET for '/departments'");
 
-// GET an employee from the company
-app.get("/employee", function(request, response) {
-   console.log("GET Request for '/employee'");
-   response.send("GET Request for '/employee");
-});
-
-// GET all timecards from company
-app.get("/timecards", function(request, response) {
-   console.log("GET request for '/timecards'");
-   response.send("Hello GET");
-});
-
-// GET a timecard from company
-app.get("/timecard", function(request, response) {
-   console.log("GET request for '/timecards'");
-   response.send("Hello GET");
-});
-
-
-
-
-// POST a timecard to company
-app.post("/timecard", function(request, response) {
-   console.log("GET request for '/timecard'");
-   console.log(request.param('id'));
-   response.send("Hello POST");
-});
-
-// Get a timecard from company
-app.delete("/timecard", function(request, response) {
-   console.log("POST request for '/'");
-   response.send("Hello DELETE");
+   // Get variables from query
+   let inCompany = request.query.company;
+   // Try to get stuff from data layer
+   try {
+      let departments = dataLayer.getAllDepartment(inCompany);
+      return response.status(200).json(departments);
+   } catch(error) {
+      console.error("Error getting departments: " + error);
+      return response.status(404).json({"error":"Could not get departments."});
+   }
 });
 
 var server = app.listen(8081,function() {

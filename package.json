@@ -4,13 +4,16 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "nodemon": "nodemon -e js --watch ./ --watch ./server.js"
   },
   "author": "",
   "license": "ISC",
   "description": "",
   "dependencies": {
     "companydata": "file:companydata",
-    "express": "^4.17.1"
+    "express": "^4.17.1",
+    "moment": "^2.24.0",
+    "nodemon": "^2.0.3"
   }
 }
