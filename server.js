@@ -64,6 +64,23 @@ app.get("/CompanyServices/employees", function(request, response) {
    }
 });
 
+// Get all timecards from a company
+app.get("/CompanyServices/timecards", function(request, response) {
+   let dataLayer = new DataLayer('txm5483');
+   console.log("Received GET for '/timecards'");
+
+   // Get variables from query
+   let inCompany = request.query.company;
+
+   // Try to get stuff from data layer
+   try {
+      let timecards = dataLayer.getAllTimecard(inCompany);
+      return response.status(200).json(timecards);
+   } catch(error) {
+      console.error("Error getting timecards: " + error);
+      return response.status(404).json({"error":"Could not get timecards."});
+   }
+});
 
 //////////////////////////////////////////// END OTHER ROUTES HANDLING ////////////////////////////////////////////
 
