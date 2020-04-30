@@ -17,6 +17,7 @@ let DataLayer = require("./companydata");
 // GET a department from company (WORKING)
 router.get("/", function(request, response) {
    let dataLayer = new DataLayer('txm5483');
+   console.log("\n");
    console.log("Received GET for '/department'");
 
    // Get variables from query
@@ -26,7 +27,10 @@ router.get("/", function(request, response) {
    // Try to get stuff from data layer
    try {
       let departments = dataLayer.getDepartment(inCompany, inDeptId);
-      return response.status(200).json(departments);
+      if (departments) {
+         return response.status(200).json(departments);
+      }
+      return response.status(404).json({"error":"Department not found: '" + inDeptId +  "''."});
    } catch(error) {
       console.error("Error getting departments: " + error);
       return response.status(404).json({"error":"Could not get department '" + inDeptId +  "''."});
@@ -37,6 +41,7 @@ router.get("/", function(request, response) {
 router.post("/", function(request, response) {
 
    let dataLayer = new DataLayer('txm5483');
+   console.log("\n");
    console.log("Received POST for '/departments'");
 
    // Get variables from body
@@ -81,8 +86,9 @@ router.post("/", function(request, response) {
 router.put("/", function(request, response) {
 
    let dataLayer = new DataLayer('txm5483');
+   console.log("\n");
    console.log("Received PUT for '/departments'");
-   console.log(request.body);
+   // console.log(request.body);
 
    // Get variables from body
    let inCompany = request.body.company;
@@ -109,7 +115,7 @@ router.put("/", function(request, response) {
 
          // Create new department object to insert & insert into data layer
          let newDepartment = new dataLayer.Department(inCompany, inDeptName, inDeptNo, inLocation, inDeptId);
-         console.log(newDepartment);
+         // console.log(newDepartment);
          let updatedDepartment = dataLayer.updateDepartment(newDepartment);
 
          // If updatedDepartment is null
@@ -131,6 +137,7 @@ router.put("/", function(request, response) {
 // Delete a department
 router.delete("/", function(request, response) {
    let dataLayer = new DataLayer('txm5483');
+   console.log("\n");
    console.log("Received DELETE for '/department'");
 
    // Get variables from query
@@ -139,6 +146,10 @@ router.delete("/", function(request, response) {
 
    // Try to delete stuff from data layer
    try {
+      // console.log(!JSON.stringify(dataLayer.getAllDepartment(inCompany)).includes(inDeptId));
+      if (!JSON.stringify(dataLayer.getAllDepartment(inCompany)).includes(inDeptId)) {
+         return response.status(404).json({"error":"Department '" + inDeptId + "' does not exist in Company."});
+      }
       let formerDepartment = dataLayer.deleteDepartment(inCompany, inDeptId);
       return response.status(200).json({success:"Department " + inDeptId + " from " + inCompany + " deleted."});
    } catch(error) {

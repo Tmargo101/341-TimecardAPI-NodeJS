@@ -32,6 +32,7 @@ app.use('/CompanyServices/company', company);
 // Get all departments from a company
 app.get("/CompanyServices/departments", function(request, response) {
    let dataLayer = new DataLayer('txm5483');
+   console.log("\n");
    console.log("Received GET for '/departments'");
 
    // Get variables from query
@@ -49,6 +50,7 @@ app.get("/CompanyServices/departments", function(request, response) {
 // Get all employees from a company
 app.get("/CompanyServices/employees", function(request, response) {
    let dataLayer = new DataLayer('txm5483');
+   console.log("\n");
    console.log("Received GET for '/employees'");
 
    // Get variables from query
@@ -67,15 +69,20 @@ app.get("/CompanyServices/employees", function(request, response) {
 // Get all timecards from a company
 app.get("/CompanyServices/timecards", function(request, response) {
    let dataLayer = new DataLayer('txm5483');
+   console.log("\n");
    console.log("Received GET for '/timecards'");
 
    // Get variables from query
    let inCompany = request.query.company;
+   let inEmployeeId = request.query.emp_id;
 
    // Try to get stuff from data layer
    try {
-      let timecards = dataLayer.getAllTimecard(inCompany);
-      return response.status(200).json(timecards);
+      let timecards = dataLayer.getAllTimecard(inEmployeeId);
+      if (timecards) {
+         return response.status(200).json(timecards);
+      }
+      return response.status(404).json({"error":"Could not get timecards for employee '" + inEmployeeId + "'."});
    } catch(error) {
       console.error("Error getting timecards: " + error);
       return response.status(404).json({"error":"Could not get timecards."});
@@ -87,8 +94,8 @@ app.get("/CompanyServices/timecards", function(request, response) {
 
 ///////////////////////////////////////////////// START SERVER ////////////////////////////////////////////////////
 
-var server = app.listen(8081,function() {
+var server = app.listen(8080,function() {
    var host = server.address().address;
    var port = server.address().port;
-   console.log("Server listening at localhost:8081")
+   console.log("Server listening at localhost:8080")
 })

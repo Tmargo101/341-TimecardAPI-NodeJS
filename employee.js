@@ -1,12 +1,13 @@
 let express = require('express');
 let router = express.Router();
 
-let dataLayer = require("./companydata/index.js");
+let DataLayer = require("./companydata/index.js");
 
 
 // GET an employee from company (WORKING)
 router.get("/", function(request, response) {
    let dataLayer = new DataLayer('txm5483');
+   console.log("\n");
    console.log("Received GET for '/employee'");
 
    // Get variables from query
@@ -15,8 +16,11 @@ router.get("/", function(request, response) {
 
    // Try to get stuff from data layer
    try {
-      let employee = dataLayer.getEmployee(inCompany, inEmployeeId);
-      return response.status(200).json(employee);
+      let employee = dataLayer.getEmployee(inEmployeeId);
+      if (employee) {
+         return response.status(200).json(employee);
+      }
+      return response.status(404).json({"error":"Could not get employee '" + inEmployeeId +  "''."});
    } catch(error) {
       console.error("Error getting employee: " + error);
       return response.status(404).json({"error":"Could not get employee '" + inEmployeeId +  "''."});
@@ -28,6 +32,7 @@ router.get("/", function(request, response) {
 router.post("/", function(request, response) {
 
    let dataLayer = new DataLayer('txm5483');
+   console.log("\n");
    console.log("Received POST for '/departments'");
 
    // Get variables from body
@@ -53,7 +58,7 @@ router.post("/", function(request, response) {
          }
 
          // Check if there is a department in company
-         if (!JSON.stringify(dataLayer.getAllDepartment(inCompany)).includes("{" + inDeptNo + "}")) {
+         if (JSON.stringify(dataLayer.getAllDepartment(inCompany)).includes("{" + inDeptId + "}")) {
             console.log("Error with POST: Department does not exist.");
             return response.status(404).json({error:"Department does not exist in company " + inCompany + "."})
          }
@@ -92,12 +97,12 @@ router.post("/", function(request, response) {
 });
 
 
-// Update a department
+// Update an employee
 router.put("/", function(request, response) {
 
    let dataLayer = new DataLayer('txm5483');
+   console.log("\n");
    console.log("Received PUT for '/employee'");
-   console.log(request.body);
 
    // Get variables from body
    let inCompany = request.body.company;
@@ -110,7 +115,7 @@ router.put("/", function(request, response) {
    let inDeptId = request.body.dept_id;
    let inManagerId = request.body.mng_id;
 
-   if (inCompany && inDeptName && inDeptNo && inLocation && inDeptId) {
+   if (inCompany && inEmployeeId >= 0 && inEmployeeName && inEmployeeNo && inHireDate && inJob && inSalary && inDeptId && inManagerId >= 0) {
       // Try to post stuff to data layer
       try {
 
@@ -127,7 +132,7 @@ router.put("/", function(request, response) {
          // }
 
          // Create new department object to insert & insert into data layer
-         let newEmployee = new dataLayer.Employee(inEmployeeName, inEmployeeNo, inHireDate, inJob, inSalary, inDeptId, inManagerId);
+         let newEmployee = new dataLayer.Employee(inEmployeeName, inEmployeeNo, inHireDate, inJob, inSalary, inDeptId, inManagerId ,inEmployeeId);
          let updatedEmployee = dataLayer.updateEmployee(newEmployee);
 
          // If updatedDepartment is null
@@ -150,6 +155,7 @@ router.put("/", function(request, response) {
 // Delete an employee
 router.delete("/", function(request, response) {
    let dataLayer = new DataLayer('txm5483');
+   console.log("\n");
    console.log("Received DELETE for '/employee'");
 
    // Get variables from query
@@ -158,7 +164,11 @@ router.delete("/", function(request, response) {
 
    // Try to delete stuff from data layer
    try {
-      let formerEmployee = dataLayer.deleteEmployee(inCompany, inEmployeeId);
+      // if (!JSON.stringify(dataLayer.getAllDepartment(inCompany)).includes(inEmployeeId)) {
+      let formerEmployee = dataLayer.deleteEmployee(inEmployeeId);
+      if (formerEmployee == 0) {
+         return response.status(404).json({"error":"Employee '" + inDeptId + "' does not exist in Company."});
+      }
       return response.status(200).json({success:"Employee " + inEmployeeId + " from " + inCompany + " deleted."});
    } catch(error) {
       console.error("Error deleting employee ''" + inEmployeeId + "'': " + error);

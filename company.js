@@ -6,6 +6,7 @@ let DataLayer = require("./companydata/index.js");
 // DELETE all company data from company
 router.delete("/", function(request, response) {
    let dataLayer = new DataLayer('txm5483');
+   console.log("\n");
    console.log("Received DELETE for '/company'");
 
    // Get variables from query
