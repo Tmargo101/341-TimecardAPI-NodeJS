@@ -3,6 +3,9 @@ let router = express.Router();
 
 let DataLayer = require("./companydata/index.js");
 
+// Import moment for date validation
+let moment = require("moment");
+
 
 // GET a timecard from company
 router.get("/", function(request, response) {
@@ -38,8 +41,8 @@ router.post("/", function(request, response) {
    // Get variables from body
    let inCompany = request.body.company;
    let inEmployeeId = request.body.emp_id;
-   let inStartTime = request.body.start_time;
-   let inEndTime = request.body.end_time;
+   let inStartTime = moment( request.body.start_time).format("YYYY-MM-DD hh:mm:ss");
+   let inEndTime = moment( request.body.end_time).format("YYYY-MM-DD hh:mm:ss");;
 
    // If all query variables are not null
    if (inCompany && inEmployeeId && inStartTime && inEndTime) {
@@ -58,6 +61,8 @@ router.post("/", function(request, response) {
             console.log("Error with POST: Employee does not exist.");
             return response.status(404).json({error:"Employee does not exist in company " + inCompany + "."})
          }
+
+         // moment(dateObj).format("YYYY-MM-DD hh:mm:ss"); 
 
          // // Check if there is a department in company
          // if (!JSON.stringify(dataLayer.getAllDepartment(inCompany)).includes("{" + inDeptNo + "}")) {
@@ -101,26 +106,28 @@ router.put("/", function(request, response) {
    // Get variables from body
    let inCompany = request.body.company;
    let inEmployeeId = request.body.emp_id;
-   let inStartTime = request.body.start_time;
-   let inEndTime = request.body.end_time;
+   let inStartTime = moment( request.body.start_time).format("YYYY-MM-DD hh:mm:ss");
+   let inEndTime = moment( request.body.end_time).format("YYYY-MM-DD hh:mm:ss");
    let inTimecardId = request.body.timecard_id;
 
    if (inCompany && inEmployeeId && inStartTime && inEndTime && inTimecardId) {
       // Try to post stuff to data layer
       try {
 
-         // // Check if Department ID exists in Company
-         // if (!JSON.stringify(dataLayer.getAllTimecard(inCompany)).includes(inDeptId)) {
-         //    console.log("Error with POST: Department ID does not exist.");
-         //    return response.status(404).json({error:"Department with dept_id '" + inDeptId + "' does not exist in " + inCompany + "."})
-         // }
-         //
-         // // Check if there is a Duplicate department in company
-         // if (JSON.stringify(dataLayer.getAllDepartment(inCompany)).includes(inDeptNo)) {
-         //    console.log("Error with POST: Duplicate Department in company.");
-         //    return response.status(404).json({error:"There is a department with dept_no '" + inDeptNo + "' in company " + inCompany + "."})
-         // }
+         // Check if company name is txm5483
+         if (inCompany != "txm5483") {
+            console.log("Error with POST: company does not match.");
+            return response.status(404).json({error:"Company does not match '" + inCompany + "'."})
+         }
 
+         // Check if there is a employee in company
+         if (!JSON.stringify(dataLayer.getAllEmployee(inCompany)).includes(inEmployeeId)) {
+            console.log("Error with POST: Employee does not exist.");
+            return response.status(404).json({error:"Employee does not exist in company " + inCompany + "."})
+         }
+
+         // Validation 3
+         
          // Create new timecard object to insert & insert into data layer
          let newTimecard = new dataLayer.Timecard(inTimecardId, inStartTime, inEndTime, inEmployeeId);
          let updatedTimecard = dataLayer.updateTimecard(newTimecard);
@@ -154,7 +161,7 @@ router.delete("/", function(request, response) {
 
    // Try to delete stuff from data layer
    try {
-      let formerTimecard = dataLayer.deleteTimecard(inCompany, inTimecardId);
+      let formerTimecard = dataLayer.deleteTimecard(inTimecardId);
       if (formerTimecard == 0) {
          return response.status(404).json({"error":`Timecard ${inTimecardId} does not exist in Company.`});
       }
