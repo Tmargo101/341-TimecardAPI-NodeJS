@@ -46,6 +46,25 @@ app.get("/CompanyServices/departments", function(request, response) {
    }
 });
 
+// Get all employees from a company
+app.get("/CompanyServices/employees", function(request, response) {
+   let dataLayer = new DataLayer('txm5483');
+   console.log("Received GET for '/employees'");
+
+   // Get variables from query
+   let inCompany = request.query.company;
+
+   // Try to get stuff from data layer
+   try {
+      let employees = dataLayer.getAllEmployee(inCompany);
+      return response.status(200).json(employees);
+   } catch(error) {
+      console.error("Error getting employees: " + error);
+      return response.status(404).json({"error":"Could not get employees."});
+   }
+});
+
+
 //////////////////////////////////////////// END OTHER ROUTES HANDLING ////////////////////////////////////////////
 
 
